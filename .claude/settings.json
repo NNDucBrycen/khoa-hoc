@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/claude-settings.json",
+  "permissions": {
+    "deny": [
+      "**/.env",
+      "**/.env.*",
+      "**/secrets/**",
+      "**/secret/**",
+      "**/credentials/**",
+      "**/credential/**",
+      "**/*.pem",
+      "**/*.key",
+      "**/*.p12",
+      "**/*.pfx",
+      "**/*.keystore",
+      "**/*.jks",
+      "**/*.cer",
+      "**/*.crt",
+      "**/id_rsa",
+      "**/id_ed25519",
+      "**/.ssh/**",
+      "**/aws_credentials",
+      "**/serviceAccountKey.json"
+    ]
+  }
+}
