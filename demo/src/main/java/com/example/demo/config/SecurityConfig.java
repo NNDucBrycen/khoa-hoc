@@ -16,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.core.env.Environment;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
@@ -36,9 +37,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final ObjectMapper objectMapper;
+    private final Environment env;
 
-    public SecurityConfig(ObjectMapper objectMapper) {
+    public SecurityConfig(ObjectMapper objectMapper, Environment env) {
         this.objectMapper = objectMapper;
+        this.env = env;
     }
 
     // ── BCrypt cost 12 (SEC-3, NFR-1) ──────────────────────────────────────────
@@ -83,10 +86,24 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
             )
             .securityContext(sc -> sc.securityContextRepository(securityContextRepository()))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(auth -> {
+                auth.requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll();
+
+                boolean allowDocs = env.getProperty("springdoc.api-docs.enabled", Boolean.class, false);
+                if (allowDocs) {
+                    auth.requestMatchers(
+                            "/v3/api-docs/**",
+                            "/v3/api-docs",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/swagger-ui/index.html",
+                            "/swagger-resources/**",
+                            "/webjars/**"
+                    ).permitAll();
+                }
+
+                auth.anyRequest().authenticated();
+            })
             .formLogin(fl -> fl.disable())
             .httpBasic(hb -> hb.disable())
             .exceptionHandling(ex -> ex
